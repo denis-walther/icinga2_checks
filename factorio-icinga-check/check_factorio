@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# A small check for factio headless servers on linux
+# 25.02.2019
+# It will just check if the game service is running
+
+# Factorio install path:
+PATH="/opt/factorio/bin/x64"
+
+# Grep if running or not (if yes, the valuie should be "factorio"):
+GREP=$(/bin/ps aux | /bin/grep '[f]actorio' | /bin/grep 'config.ini' | /usr/bin/awk '{print $1}')
+
+# Grep the port factorio is running on:
+PORT=$(/bin/ps aux | /bin/grep '[f]actorio' | /bin/grep -ow 'port [0-9]*' | /usr/bin/awk '{print $2}')
+
+# Output messages
+OK="OK: FACTORIO seems to be running fine on port $PORT"
+CRITICAL="FAILED: FACTORIO seems to be dead - check the service!"
+
+WARNING="WARNING: $PORT seems to be unrachable - check the port and factorio service!"
+UNKNOWN="UNKNOWN: Something seems to be broken - check the service and port!"
+
+# Main if function
+if [ -z $GREP ]; then
+	echo "$CRITICAL"
+	exit 2;
+else
+	echo "$OK"
+	exit 0;
+fi
+
+# WARNING + UNKNOWN
+if [ -z $PORT ]; then
+	echo "$WARNING"
+	exit 1;
+else
+	echo "$OK"
+	exit 0;
+fi
+
+DEAD=$(/bin/systemctl status factorio.service | grep dead)
+if [ -z $DEAD ]; then
+	echo "$OK"
+	exit 0;
+else
+	echo "$UNKNOWN"
+	exit 3;
+fi
